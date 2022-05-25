@@ -5,9 +5,10 @@ public class Car implements Runnable {
     static {
         CARS_COUNT = 0;
     }
-    private Race race;
-    private int speed;
-    private String name;
+    private final Race race;
+    private final int speed;
+    private final String name;
+
     public String getName() {
         return name;
     }
@@ -26,11 +27,17 @@ public class Car implements Runnable {
             System.out.println(this.name + " готовится");
             Thread.sleep(500 + (int)(Math.random() * 800));
             System.out.println(this.name + " готов");
+            MainClass.ready.countDown();
+            MainClass.cyclicBarrier.await();
         } catch (Exception e) {
             e.printStackTrace();
         }
         for (int i = 0; i < race.getStages().size(); i++) {
             race.getStages().get(i).go(this);
+        }
+        MainClass.finish.countDown();
+        if (MainClass.finish.getCount() == CARS_COUNT - 1){
+            System.out.println("Winner - " + getName());
         }
     }
 }

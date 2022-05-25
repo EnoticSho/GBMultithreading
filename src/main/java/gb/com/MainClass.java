@@ -1,7 +1,15 @@
 package gb.com;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Semaphore;
+
 public class MainClass {
-    public static final int CARS_COUNT = 4;
+    static final int CARS_COUNT = 4;
+    static final CountDownLatch finish = new CountDownLatch(CARS_COUNT);
+    static final CountDownLatch ready = new CountDownLatch(CARS_COUNT);
+    static final Semaphore smp = new Semaphore(CARS_COUNT / 2);
+    static final CyclicBarrier cyclicBarrier = new CyclicBarrier(CARS_COUNT);
     public static void main(String[] args) {
         System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Подготовка!!!");
         Race race = new Race(new Road(60), new Tunnel(), new Road(40));
@@ -12,7 +20,17 @@ public class MainClass {
         for (int i = 0; i < cars.length; i++) {
             new Thread(cars[i]).start();
         }
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка началась!!!");
-        System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка закончилась!!!");
+        try {
+            ready.await();
+            System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка началась!!!");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            finish.await();
+            System.out.println("ВАЖНОЕ ОБЪЯВЛЕНИЕ >>> Гонка закончилась!!!");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
