@@ -1,7 +1,12 @@
 package gb.com;
 
+import java.util.concurrent.Semaphore;
+
 public class Tunnel extends Stage {
-    public Tunnel() {
+    private final Semaphore smp;
+
+    public Tunnel(Semaphore smp) {
+        this.smp = smp;
         this.length = 80;
         this.description = "Тоннель " + length + " метров";
     }
@@ -10,14 +15,14 @@ public class Tunnel extends Stage {
         try {
             try {
                 System.out.println(c.getName() + " готовится к этапу(ждет): " + description);
-                MainClass.smp.acquire();
+                smp.acquire();
                 System.out.println(c.getName() + " начал этап: " + description);
                 Thread.sleep(length / c.getSpeed() * 1000L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
                 System.out.println(c.getName() + " закончил этап: " + description);
-                MainClass.smp.release();
+                smp.release();
             }
         } catch (Exception e) {
             e.printStackTrace();

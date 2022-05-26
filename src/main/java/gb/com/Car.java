@@ -1,5 +1,8 @@
 package gb.com;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+
 public class Car implements Runnable {
     private static int CARS_COUNT;
     static {
@@ -7,6 +10,9 @@ public class Car implements Runnable {
     }
     private final Race race;
     private final int speed;
+    private final CyclicBarrier cyclicBarrier;
+    private final CountDownLatch ready;
+    private final CountDownLatch finish;
     private final String name;
 
     public String getName() {
@@ -15,9 +21,12 @@ public class Car implements Runnable {
     public int getSpeed() {
         return speed;
     }
-    public Car(Race race, int speed) {
+    public Car(Race race, int speed, CyclicBarrier cyclicBarrier, CountDownLatch ready, CountDownLatch finish) {
         this.race = race;
         this.speed = speed;
+        this.cyclicBarrier = cyclicBarrier;
+        this.ready = ready;
+        this.finish = finish;
         CARS_COUNT++;
         this.name = "Участник #" + CARS_COUNT;
     }
@@ -27,16 +36,16 @@ public class Car implements Runnable {
             System.out.println(this.name + " готовится");
             Thread.sleep(500 + (int)(Math.random() * 800));
             System.out.println(this.name + " готов");
-            MainClass.ready.countDown();
-            MainClass.cyclicBarrier.await();
+            ready.countDown();
+            cyclicBarrier.await();
         } catch (Exception e) {
             e.printStackTrace();
         }
         for (int i = 0; i < race.getStages().size(); i++) {
             race.getStages().get(i).go(this);
         }
-        MainClass.finish.countDown();
-        if (MainClass.finish.getCount() == CARS_COUNT - 1){
+        finish.countDown();
+        if (finish.getCount() == CARS_COUNT - 1){
             System.out.println("Winner - " + getName());
         }
     }
